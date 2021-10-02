@@ -46,6 +46,22 @@ func NewMissingClusterResource(t *testing.T, kind, name, ns string, kubectl Kube
 	}
 }
 
+func NewClusterResource(t *testing.T, kind, name, ns string, kubectl Kubectl) {
+	_, err := kubectl.RunWithOpts([]string{"create", kind, name, "-n", ns}, RunOpts{AllowError: true, NoNamespace: true})
+	if err != nil {
+		t.Fatalf("Failed to deploy resource %s/%s: %s", kind, name, err)
+	}
+}
+
+func RemoveClusterResource(t *testing.T, kind, name, ns string, kubectl Kubectl) {
+	_, err := kubectl.RunWithOpts([]string{"delete", kind, name, "-n", ns}, RunOpts{AllowError: true, NoNamespace: true})
+	if err != nil {
+		if !strings.Contains(err.Error(), "Error from server (NotFound)") {
+			t.Fatalf("Failed to delete resource %s/%s: %s", kind, name, err)
+		}
+	}
+}
+
 func (r ClusterResource) UID() string {
 	uid := r.res.UID()
 	if len(uid) == 0 {
